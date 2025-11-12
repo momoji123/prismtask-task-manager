@@ -4,6 +4,13 @@
 let _authToken = null;
 let _authUsername = null;
 
+export const pywebviewReady = new Promise(resolve => {
+    window.addEventListener('pywebviewready', () => {
+        console.log('pywebview is ready');
+        resolve();
+    });
+});
+
 /**
  * Initializes authentication by attempting to load the token from sessionStorage.
  */
@@ -21,6 +28,7 @@ export function initAuth() {
  * Attempts to log in the user and retrieve a JWT.
  */
 export async function login(username, password) {
+    await pywebviewReady;
     try {
         const data = await window.pywebview.api.login(username, password);
         if (data.error) {
@@ -70,6 +78,7 @@ async function handleApiResponse(response) {
  * Loads a task's full details from the server.
  */
 export async function loadTaskFromServer(taskId) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.load_task(_authToken, taskId);
         return await handleApiResponse(response);
@@ -83,6 +92,7 @@ export async function loadTaskFromServer(taskId) {
  * Loads a summary of tasks from the server.
  */
 export async function loadTasksSummaryFromServer(filters = {}, pagination = {}) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.load_tasks_summary(_authToken, filters, pagination);
         return await handleApiResponse(response);
@@ -96,6 +106,7 @@ export async function loadTasksSummaryFromServer(filters = {}, pagination = {}) 
  * Sends task data to the Python server.
  */
 export async function saveTaskToServer(task) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.save_task(_authToken, task);
         return await handleApiResponse(response);
@@ -109,6 +120,7 @@ export async function saveTaskToServer(task) {
  * Deletes a task from the Python server.
  */
 export async function deleteTaskFromServer(taskId) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.delete_task(_authToken, taskId);
         return await handleApiResponse(response);
@@ -122,6 +134,7 @@ export async function deleteTaskFromServer(taskId) {
  * Loads all milestones for a given task from the server.
  */
 export async function loadMilestonesForTaskFromServer(taskId) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.load_milestones_for_task(_authToken, taskId);
         return await handleApiResponse(response);
@@ -135,6 +148,7 @@ export async function loadMilestonesForTaskFromServer(taskId) {
  * Sends milestone data to the Python server.
  */
 export async function saveMilestoneToServer(milestone, taskId) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.save_milestone(_authToken, milestone, taskId);
         return await handleApiResponse(response);
@@ -148,6 +162,7 @@ export async function saveMilestoneToServer(milestone, taskId) {
  * Loads a single milestone's full details from the server.
  */
 export async function loadMilestoneFromServer(taskId, milestoneId) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.load_milestone(_authToken, taskId, milestoneId);
         return await handleApiResponse(response);
@@ -161,6 +176,7 @@ export async function loadMilestoneFromServer(taskId, milestoneId) {
  * Deletes milestone data from the Python server.
  */
 export async function deleteMilestoneFromServer(milestoneId, taskId) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.delete_milestone(_authToken, milestoneId, taskId);
         return await handleApiResponse(response);
@@ -174,6 +190,7 @@ export async function deleteMilestoneFromServer(milestoneId, taskId) {
  * Loads a distinct list of statuses from the server.
  */
 export async function getStatusesFromServer() {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.get_distinct_statuses(_authToken);
         return await handleApiResponse(response);
@@ -187,6 +204,7 @@ export async function getStatusesFromServer() {
  * Loads a distinct list of 'from' values from the server.
  */
 export async function getFromValuesFromServer() {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.get_distinct_from_values(_authToken);
         return await handleApiResponse(response);
@@ -200,6 +218,7 @@ export async function getFromValuesFromServer() {
  * Loads a distinct list of categories from the server.
  */
 export async function getCategoriesFromServer() {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.get_distinct_categories(_authToken);
         return await handleApiResponse(response);
@@ -213,6 +232,7 @@ export async function getCategoriesFromServer() {
  * Gets task counts by status from the server.
  */
 export async function getTaskCounts(since = null) {
+    await pywebviewReady;
     try {
         const response = await window.pywebview.api.get_task_counts(_authToken, since);
         return await handleApiResponse(response);
