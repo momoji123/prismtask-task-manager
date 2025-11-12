@@ -431,7 +431,24 @@ async function manageAuthentication(onUpdateUsernameCallback) {
     logoutConfirmBtn.addEventListener('click', async () => {
         logout(); // Call apiService logout
         username = null; // Update local state
+        
+        // Clear local lists
+        categories = [];
+        statuses = [];
+        froms = [];
+
+        // Clear lists in IndexedDB
+        await DB.putMeta('categories', []);
+        await DB.putMeta('statuses', []);
+        await DB.putMeta('froms', []);
+
         if (onUpdateUsernameCallback) onUpdateUsernameCallback(null); // Update global UI state
+        
+        // Update UI components with cleared lists
+        if (updateLeftMenuTaskUICallback) updateLeftMenuTaskUICallback({ categories, statuses, froms, selectedFilterCategories: [] });
+        if (updateTaskEditorUICallback) updateTaskEditorUICallback({ categories, statuses, froms });
+        if (updateMilestoneEditorUICallback) updateMilestoneEditorUICallback({ statuses });
+
         renderTaskList(); // Re-render task list after logout
         showModalAlert('Logged out successfully.');
         modalBackdrop.remove(); // Close modal

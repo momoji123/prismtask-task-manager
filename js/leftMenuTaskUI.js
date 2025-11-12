@@ -96,8 +96,8 @@ export async function initLeftMenuTaskUI(initialState, onOpenEditor, onOpenViewe
       deadline: null,
       finishDate: null,
       from: initialState.froms[0] || '',
-      categories: [initialState.categories[0] || 'General'],
-      status: initialState.statuses[0] || 'todo',
+      categories: initialState.categories.length > 0 ? [initialState.categories[0]] : [],
+      status: initialState.statuses[0] || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       creator: currentUsername

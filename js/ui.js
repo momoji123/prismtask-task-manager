@@ -29,13 +29,12 @@ export const UI = (function() {
    */
   async function init() {
     // 1. Load custom options and application settings from DB
-    // Ensure categories is always an array. If DB.getMeta('categories') returns
-    // something that's not an array, default to ['General'].
+    // Ensure categories is always an array. 
     const storedCategories = await DB.getMeta('categories');
-    categories = Array.isArray(storedCategories) ? storedCategories : ['General'];
+    categories = Array.isArray(storedCategories) ? storedCategories : [];
 
-    statuses = (await DB.getMeta('statuses')) || ['todo', 'in-progress', 'done'];
-    froms = (await DB.getMeta('froms')) || ['Work', 'Personal', 'Shopping'];
+    statuses = (await DB.getMeta('statuses')) || [];
+    froms = (await DB.getMeta('froms')) || [];
     filterSectionVisible = (await DB.getMeta('filterSectionVisible')) ?? true;
     selectedFilterCategories = (await DB.getMeta('selectedFilterCategories')) || [];
     selectedFilterStatuses = (await DB.getMeta('selectedFilterStatuses')) || [];
