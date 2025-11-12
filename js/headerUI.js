@@ -101,6 +101,15 @@ export function initHeader(
   document.querySelector(selectors.exportBtn)?.addEventListener('click', exportJSON);
   document.querySelector(selectors.importBtn)?.addEventListener('click', () => document.querySelector(selectors.importFile)?.click());
   document.querySelector(selectors.importFile)?.addEventListener('change', importJSON);
+  
+  updateSettingsDropdownVisibility();
+}
+
+function updateSettingsDropdownVisibility() {
+    const loggedIn = !!getAuthenticatedUsername();
+    document.querySelector(selectors.manageCategoriesBtn).style.display = loggedIn ? 'block' : 'none';
+    document.querySelector(selectors.manageStatusesBtn).style.display = loggedIn ? 'block' : 'none';
+    document.querySelector(selectors.manageFromsBtn).style.display = loggedIn ? 'block' : 'none';
 }
 
 /**
@@ -132,15 +141,15 @@ async function manageList(type, title, renderFilterCategoriesMultiSelectCallback
 
   if (type === 'categories') {
     currentList = [...categories];
-    defaultList = ['General'];
+    defaultList = [];
     putMetaKey = 'categories';
   } else if (type === 'statuses') {
     currentList = [...statuses];
-    defaultList = ['todo', 'in-progress', 'done'];
+    defaultList = [];
     putMetaKey = 'statuses';
   } else if (type === 'froms') {
     currentList = [...froms];
-    defaultList = ['Work', 'Personal', 'Shopping'];
+    defaultList = [];
     putMetaKey = 'froms';
   } else {
     console.error('Unknown list type:', type);
@@ -426,6 +435,7 @@ async function manageAuthentication(onUpdateUsernameCallback) {
         renderTaskList(); // Re-render task list after logout
         showModalAlert('Logged out successfully.');
         modalBackdrop.remove(); // Close modal
+        updateSettingsDropdownVisibility();
     });
   }
 
@@ -459,9 +469,11 @@ async function manageAuthentication(onUpdateUsernameCallback) {
             // await DB.putMeta('username', loginResult.username);
             username = loginResult.username; // Update local state
             if (onUpdateUsernameCallback) onUpdateUsernameCallback(username); // Update global UI state
+            await updateListsFromServer();
             renderTaskList(); // Re-render task list after login
             showModalAlert('Login successful!');
             cleanupAndResolve(true);
+            updateSettingsDropdownVisibility();
         } catch (error) {
             showModalAlert(`Login failed: ${error.message}`);
         }
@@ -469,6 +481,26 @@ async function manageAuthentication(onUpdateUsernameCallback) {
     cancelBtn.onclick = () => cleanupAndResolve(false);
     closeBtn.onclick = () => cleanupAndResolve(false);
   });
+}
+
+async function updateListsFromServer() {
+    const serverCategories = await getCategoriesFromServer();
+    const serverStatuses = await getStatusesFromServer();
+    const serverFroms = await getFromValuesFromServer();
+
+    console.log(serverFroms)
+
+    categories = [...new Set([...categories, ...serverCategories])];
+    statuses = [...new Set([...statuses, ...serverStatuses])];
+    froms = [...new Set([...froms, ...serverFroms])];
+
+    await DB.putMeta('categories', categories);
+    await DB.putMeta('statuses', statuses);
+    await DB.putMeta('froms', froms);
+
+    if (updateLeftMenuTaskUICallback) updateLeftMenuTaskUICallback({ categories, statuses, froms });
+    if (updateTaskEditorUICallback) updateTaskEditorUICallback({ categories, statuses, froms });
+    if (updateMilestoneEditorUICallback) updateMilestoneEditorUICallback({ statuses });
 }
 
 
