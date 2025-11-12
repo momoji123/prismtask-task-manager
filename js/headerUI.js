@@ -172,6 +172,7 @@ async function manageList(type, title, renderFilterCategoriesMultiSelectCallback
       <div style="display:flex; gap:8px; margin-top: 12px;">
         <input type="text" id="listManagerInput" placeholder="Add new ${type.slice(0, -1) || 'item'}..." class="flex-grow">
         <button id="listManagerAddBtn">Add</button>
+        <button id="listManagerUpdateBtn">Update</button>
       </div>
     </div>
   `;
@@ -183,6 +184,7 @@ async function manageList(type, title, renderFilterCategoriesMultiSelectCallback
   const listManagerTags = modalBody.querySelector('#listManagerTags');
   const listManagerInput = modalBody.querySelector('#listManagerInput');
   const listManagerAddBtn = modalBody.querySelector('#listManagerAddBtn');
+  const listManagerUpdateBtn = modalBody.querySelector('#listManagerUpdateBtn');
 
   // Function to render tags inside the modal
   const renderModalTags = () => {
@@ -247,6 +249,29 @@ async function manageList(type, title, renderFilterCategoriesMultiSelectCallback
         renderModalTags();
       } else if (newItem && tempList.includes(newItem)) {
         showModalAlert(`"${newItem}" already exists in the list.`);
+      }
+    });
+  }
+
+  // Update from server functionality
+  if (listManagerUpdateBtn) {
+    listManagerUpdateBtn.addEventListener('click', async () => {
+      let serverList = [];
+      if (type === 'categories') {
+        serverList = await getCategoriesFromServer();
+      } else if (type === 'statuses') {
+        serverList = await getStatusesFromServer();
+      } else if (type === 'froms') {
+        serverList = await getFromValuesFromServer();
+      }
+
+      const missingItems = serverList.filter(item => !tempList.includes(item));
+      if (missingItems.length > 0) {
+        tempList.push(...missingItems);
+        renderModalTags();
+        showModalAlert(`Added missing items: ${missingItems.join(', ')}`);
+      } else {
+        showModalAlert('No new items to add from the server.');
       }
     });
   }
