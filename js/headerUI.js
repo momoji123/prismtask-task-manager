@@ -368,10 +368,6 @@ async function manageAuthentication(onUpdateUsernameCallback) {
           <label for="passwordInput" class="label">Password</label>
           <input type="password" id="passwordInput" placeholder="Enter your password" class="w-full mt-1 p-2 border rounded">
       </div>
-      <div style="margin-top: 12px;">
-          <label for="confirmPasswordInput" class="label">Confirm Password</label>
-          <input type="password" id="confirmPasswordInput" placeholder="Confirm your password" class="w-full mt-1 p-2 border rounded">
-      </div>
     `;
     saveBtn.textContent = 'Login'; // Change button text to Login
   } else {
@@ -395,7 +391,6 @@ async function manageAuthentication(onUpdateUsernameCallback) {
 
   const usernameInput = modalBody.querySelector('#usernameInput');
   const passwordInput = modalBody.querySelector('#passwordInput');
-  const confirmPasswordInput = modalBody.querySelector('#confirmPasswordInput');
   const logoutConfirmBtn = modalBody.querySelector('#logoutConfirmBtn');
 
   if (logoutConfirmBtn) {
@@ -419,7 +414,6 @@ async function manageAuthentication(onUpdateUsernameCallback) {
         // This block runs only if we're in the login flow
         const newUsername = usernameInput.value.trim();
         const newPassword = passwordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
 
         if (!newUsername) {
             showModalAlert('Username cannot be empty. Please enter a valid username.');
@@ -431,10 +425,6 @@ async function manageAuthentication(onUpdateUsernameCallback) {
         }
         if (!newPassword) {
             showModalAlert('Password cannot be empty. Please enter a password.');
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            showModalAlert('Passwords do not match. Please re-enter your password.');
             return;
         }
 

@@ -11,31 +11,11 @@ export const DB = (function(){
       r.onupgradeneeded = e => {
         const idb = e.target.result;
         
-        // Task store
-        let tstore;
-        if(!idb.objectStoreNames.contains(STORE_TASKS)){
-          tstore = idb.createObjectStore(STORE_TASKS,{keyPath:'id'});
-        } else {
-          tstore = r.transaction.objectStore(STORE_TASKS);
-        }
-        if(!tstore.indexNames.contains('deadline')) tstore.createIndex('deadline','deadline',{unique:false});
-        if(!tstore.indexNames.contains('updatedAt')) tstore.createIndex('updatedAt','updatedAt',{unique:false});
-        if(!tstore.indexNames.contains('from')) tstore.createIndex('from','from',{unique:false});
-        if(!tstore.indexNames.contains('finishDate')) tstore.createIndex('finishDate','finishDate',{unique:false});
-
         // Meta store for custom categories, statuses, etc.
         if(!idb.objectStoreNames.contains(STORE_META)){
           idb.createObjectStore(STORE_META,{keyPath:'key'});
         }
 
-        // New Milestone store (for version 4)
-        if(!idb.objectStoreNames.contains(STORE_MILESTONES)){
-          const mstore = idb.createObjectStore(STORE_MILESTONES,{keyPath:'id'});
-          // Index to quickly retrieve milestones by their parent task ID
-          mstore.createIndex('taskId','taskId',{unique:false});
-          mstore.createIndex('deadline','deadline',{unique:false});
-          mstore.createIndex('finishDate','finishDate',{unique:false});
-        }
       };
       r.onsuccess = e => { db = e.target.result; resolve(db); };
       r.onerror = e => reject(e.target.error);

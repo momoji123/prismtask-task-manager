@@ -246,6 +246,10 @@ export async function renderStatistics() {
 
     } catch (error) {
         console.error('Failed to render statistics:', error);
-        placeholder.innerHTML = '<div class="error">Failed to load statistics.</div>';
+        placeholder.innerHTML = '<div class="error">Failed to load statistics. <button id="refresh-statistics-btn" class="action-btn">Refresh</button></div>';
+        const refreshButton = document.getElementById('refresh-statistics-btn');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', renderStatistics);
+        }
     }
 }
