@@ -1,5 +1,5 @@
 import json
-import sqlite3
+import sqlcipher3.dbapi2 as sqlite3
 import os
 import hashlib
 import hmac
@@ -7,15 +7,14 @@ import base64
 from datetime import datetime, timedelta
 import time
 from urllib.parse import parse_qs
+from DBconnector import connectDB
+from env_variables import DATABASE_KEY, SECRET_KEY
 
 # Import functions from user_manager
 from user_manager import verify_user, _init_auth_db
 
 # Define the SQLite database file path.
 DB_FILE = "./data/tasks.db"
-
-# Secret key for JWT.
-SECRET_KEY = os.getenv("AUTH_PEPPER_JWT", "your_super_secret_jwt_key_please_change_this!").encode('utf-8')
 
 # --- JWT Helper Functions ---
 
@@ -57,9 +56,8 @@ def verify_jwt(token, secret):
 # --- Database Initialization ---
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL;")
+    print("Initializing SQLite database...")
+    conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS tasks (
             id TEXT PRIMARY KEY, creator TEXT NOT NULL, title TEXT, "from" TEXT, priority INTEGER, 
@@ -107,8 +105,7 @@ class Api:
     def load_task(self, token, taskId):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT * FROM tasks WHERE id = ? AND creator = ?", (taskId, username))
         row = cursor.fetchone()
         conn.close()
@@ -126,8 +123,7 @@ class Api:
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
         
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
 
         sql_query = "SELECT id, creator, title, \"from\", priority, deadline, finishDate, status, categories, createdAt, updatedAt FROM tasks WHERE creator = ?"
         query_args = [username]
@@ -219,8 +215,7 @@ class Api:
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
         
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         
         categories_json = json.dumps(task.get('categories', []))
         attachments_json = json.dumps(task.get('attachments', []))
@@ -244,8 +239,7 @@ class Api:
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
         
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("DELETE FROM tasks WHERE id = ? AND creator = ?", (taskId, username))
         conn.commit()
         conn.close()
@@ -254,8 +248,7 @@ class Api:
     def load_milestones_for_task(self, token, taskId):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT id FROM tasks WHERE id = ? AND creator = ?", (taskId, username))
         if not cursor.fetchone():
             conn.close()
@@ -275,8 +268,7 @@ class Api:
     def save_milestone(self, token, milestone, taskId):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT id FROM tasks WHERE id = ? AND creator = ?", (taskId, username))
         if not cursor.fetchone():
             conn.close()
@@ -299,8 +291,7 @@ class Api:
     def load_milestone(self, token, taskId, milestoneId):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT id FROM tasks WHERE id = ? AND creator = ?", (taskId, username))
         if not cursor.fetchone():
             conn.close()
@@ -320,8 +311,7 @@ class Api:
     def delete_milestone(self, token, milestoneId, taskId):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT id FROM tasks WHERE id = ? AND creator = ?", (taskId, username))
         if not cursor.fetchone():
             conn.close()
@@ -340,8 +330,7 @@ class Api:
     def get_distinct_statuses(self, token):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT DISTINCT status FROM tasks WHERE creator = ? AND status IS NOT NULL AND status != '' ORDER BY status", (username,))
         statuses = [row[0] for row in cursor.fetchall()]
         conn.close()
@@ -350,8 +339,7 @@ class Api:
     def get_distinct_from_values(self, token):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT DISTINCT \"from\" FROM tasks WHERE creator = ? AND \"from\" IS NOT NULL AND \"from\" != '' ORDER BY \"from\"", (username,))
         from_values = [row[0] for row in cursor.fetchall()]
         conn.close()
@@ -360,9 +348,9 @@ class Api:
     def get_distinct_categories(self, token):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
+        
         all_categories = set()
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         cursor.execute("SELECT categories FROM tasks WHERE creator = ? AND categories IS NOT NULL AND categories != ''", (username,))
         rows = cursor.fetchall()
         conn.close()
@@ -378,8 +366,7 @@ class Api:
     def get_task_counts(self, token, since=None):
         username = self._get_authenticated_username(token)
         if not username: return {"error": "Authentication required."}
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(DB_FILE, DATABASE_KEY)
         sql_query = "SELECT status, COUNT(*) FROM tasks WHERE creator = ? GROUP BY status"
         query_args = [username]
         if since and since.isdigit():

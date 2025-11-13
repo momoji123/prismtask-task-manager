@@ -1,22 +1,20 @@
-import sqlite3
+import sqlcipher3.dbapi2 as sqlite3
 import hashlib
 import os
+from DBconnector import connectDB
+from env_variables import DATABASE_KEY, PEPPER
 
 # Define the authentication database file path.
 AUTH_DB_FILE = "./data/auth.db"
-PEPPER = os.getenv("AUTH_PEPPER", "a_strong_random_pepper_string_CHANGE_THIS_IN_PRODUCTION!")
 
 def _init_auth_db():
     """Initializes the SQLite authentication database and creates the users table if it doesn't exist."""
+    print("Initializing authentication database...")
     conn = None
     try:
         # Ensure the data directory exists
         os.makedirs(os.path.dirname(AUTH_DB_FILE), exist_ok=True)
-        conn = sqlite3.connect(AUTH_DB_FILE)
-        cursor = conn.cursor()
-
-        # Enable WAL mode for better concurrency
-        cursor.execute("PRAGMA journal_mode=WAL;")
+        conn, cursor = connectDB(AUTH_DB_FILE, DATABASE_KEY)
 
         # Create users table
         # password_hash will store the hashed password
@@ -47,8 +45,7 @@ def register_user(username, password):
     """Registers a new user."""
     conn = None
     try:
-        conn = sqlite3.connect(AUTH_DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(AUTH_DB_FILE, DATABASE_KEY)
 
         # Generate a unique salt for the user
         salt = os.urandom(16).hex()
@@ -74,8 +71,7 @@ def change_password(username, old_password, new_password):
     """Changes a user's password."""
     conn = None
     try:
-        conn = sqlite3.connect(AUTH_DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(AUTH_DB_FILE, DATABASE_KEY)
 
         # Retrieve user's salt and hashed password
         cursor.execute("SELECT salt, password_hash FROM users WHERE username = ?", (username,))
@@ -109,8 +105,7 @@ def verify_user(username, password):
     """Verifies user credentials."""
     conn = None
     try:
-        conn = sqlite3.connect(AUTH_DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(AUTH_DB_FILE, DATABASE_KEY)
 
         cursor.execute("SELECT password_hash, salt FROM users WHERE username = ?", (username,))
         result = cursor.fetchone()
@@ -134,8 +129,7 @@ def delete_user(username):
     """Deletes a user from the authentication database."""
     conn = None
     try:
-        conn = sqlite3.connect(AUTH_DB_FILE)
-        cursor = conn.cursor()
+        conn, cursor = connectDB(AUTH_DB_FILE, DATABASE_KEY)
         cursor.execute("DELETE FROM users WHERE username = ?", (username,))
         conn.commit()
         if cursor.rowcount > 0:

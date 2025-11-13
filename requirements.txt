@@ -1,1 +1,2 @@
-pywebview
+pywebview~=6.1
+sqlcipher3-wheels~=0.5.5
