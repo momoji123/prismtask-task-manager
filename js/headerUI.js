@@ -8,7 +8,7 @@ import { escapeHtml, showModalAlert, showModalAlertConfirm } from './utilUI.js';
 import { login, logout, getAuthenticatedUsername, initAuth, saveTaskToServer, saveMilestoneToServer, loadTasksSummaryFromServer, loadTaskFromServer, loadMilestonesForTaskFromServer, 
   getCategoriesFromServer, getStatusesFromServer, getFromValuesFromServer 
 } from './apiService.js';
-import { renderTaskList } from './leftMenuTaskUI.js';
+import { renderTaskList, getCurrentFilters } from './leftMenuTaskUI.js';
 
 // Internal state, initialized by the main UI module
 let categories = [];
@@ -31,7 +31,6 @@ const selectors = {
   manageStatusesBtn: '#manageStatusesBtn',
   manageFromsBtn: '#manageFromsBtn',
   manageAuthBtn: '#manageAuthBtn', // Renamed selector for authentication settings
-  clearAllBtn: '#clearAllBtn',
   filterCategoryMultiSelect: '#filterCategoryMultiSelect', // Needed for dropdown close logic
 };
 
@@ -96,7 +95,6 @@ export function initHeader(
   document.querySelector(selectors.manageStatusesBtn)?.addEventListener('click', () => manageList('statuses', 'Manage Statuses', renderFilterCategoriesMultiSelectCallback, renderStatusOptionsCallback));
   document.querySelector(selectors.manageFromsBtn)?.addEventListener('click', () => manageList('froms', 'Manage "From" Sources', renderFilterCategoriesMultiSelectCallback, renderStatusOptionsCallback));
   document.querySelector(selectors.manageAuthBtn)?.addEventListener('click', () => manageAuthentication(updateUsernameCallback)); // Updated to call manageAuthentication
-  document.querySelector(selectors.clearAllBtn)?.addEventListener('click', clearAllData);
 
   document.querySelector(selectors.exportBtn)?.addEventListener('click', exportJSON);
   document.querySelector(selectors.importBtn)?.addEventListener('click', () => document.querySelector(selectors.importFile)?.click());
@@ -520,47 +518,26 @@ async function updateListsFromServer() {
     if (updateMilestoneEditorUICallback) updateMilestoneEditorUICallback({ statuses });
 }
 
-
-/**
- * Clears all persisted data from IndexedDB.
- */
-async function clearAllData() {
-  const confirmed = await showModalAlertConfirm('Are you sure you want to clear ALL persisted data (tasks, categories, statuses, settings)? This action cannot be undone.');
-
-  if (confirmed) {
-    // Close the IndexedDB connection before deleting the database
-    await DB.close(); // Ensure DB connection is closed
-
-    // Delete the IndexedDB database
-    const req = indexedDB.deleteDatabase('taskmgr-v1'); // Assuming DB_NAME from storage.js
-
-    req.onsuccess = () => {
-      console.log("Database deleted successfully");
-      // Also clear any localStorage if used for other settings (though this app primarily uses IndexedDB)
-      localStorage.clear();
-      sessionStorage.clear(); // Clear session storage as well
-      // Reload the page to reflect the cleared state
-      window.location.reload();
-    };
-
-    req.onerror = (event) => {
-      console.error("Error deleting database:", event.target.error);
-      showModalAlert(`Error clearing data: ${event.target.error.message}`);
-    };
-  }
-}
-
 /**
  * Opens a modal for the user to select tasks for export, then exports the selected tasks.
  */
 async function exportJSON() {
-  // Fetch a summary of all tasks from the server
-  let allTasksSummary = [];
+  // Get the current filters from the left menu
+  const filters = getCurrentFilters();
+
+  // Fetch a summary of the filtered tasks from the server
+  let filteredTasksSummary = [];
   try {
-    allTasksSummary = await loadTasksSummaryFromServer();
+    // We pass the filters, but also a very high limit to get all filtered tasks, ignoring pagination.
+    filteredTasksSummary = await loadTasksSummaryFromServer(filters, { limit: 10000, offset: 0 });
   } catch (error) {
-    console.error('Failed to load task summaries for export:', error);
-    showModalAlert('Error: Could not load tasks from server for export. Please check your network connection and try again.');
+    console.error('Failed to load filtered task summaries for export:', error);
+    showModalAlert('Error: Could not load filtered tasks from server for export.');
+    return;
+  }
+
+  if (filteredTasksSummary.length === 0) {
+    showModalAlert('No tasks to export based on the current filters.');
     return;
   }
 
@@ -581,7 +558,7 @@ async function exportJSON() {
 
   // Populate the task list with checkboxes using the summary data
   taskSelectionList.innerHTML = '';
-  allTasksSummary.forEach(task => {
+  filteredTasksSummary.forEach(task => {
     const taskItem = document.createElement('div');
     taskItem.className = 'task-selection-item';
     taskItem.innerHTML = `

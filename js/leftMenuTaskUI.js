@@ -204,21 +204,7 @@ export async function renderTaskList(isNewFilter = true) {
     loadedTasks = []; // Clear task list on new filter application
   }
 
-  const filters = {
-    q: document.querySelector(selectors.searchInput)?.value || '',
-    categories: selectedFilterCategories,
-    statuses: selectedFilterStatuses,
-    sortBy: document.querySelector(selectors.sortBy)?.value || 'updatedAt',
-    createdRF: document.querySelector(selectors.createdRangeFrom)?.value,
-    createdRT: document.querySelector(selectors.createdRangeTo)?.value,
-    updatedRF: document.querySelector(selectors.updatedRangeFrom)?.value,
-    updatedRT: document.querySelector(selectors.updatedRangeTo)?.value,
-    deadlineRF: document.querySelector(selectors.deadlineRangeFrom)?.value,
-    deadlineRT: document.querySelector(selectors.deadlineRangeTo)?.value,
-    finishedRF: document.querySelector(selectors.finishedRangeFrom)?.value,
-    finishedRT: document.querySelector(selectors.finishedRangeTo)?.value,
-    groupBy: document.querySelector(selectors.groupBy)?.value || '__none',
-  };
+  const filters = getCurrentFilters();
 
   const limit = parseInt(document.querySelector(selectors.tasksPerPage)?.value, 10) || 10;
   let newTasks = [];
@@ -486,4 +472,27 @@ export function clearTaskSelection() {
     previouslySelected.classList.remove('selected-task-item');
   }
   currentSelectedTaskId = null;
+}
+
+/**
+ * Returns the current filter, sort, and group settings from the UI.
+ * @returns {object} An object containing the current filter values.
+ */
+export function getCurrentFilters() {
+  const filters = {
+    q: document.querySelector(selectors.searchInput)?.value || '',
+    categories: selectedFilterCategories,
+    statuses: selectedFilterStatuses,
+    sortBy: document.querySelector(selectors.sortBy)?.value || 'updatedAt',
+    createdRF: document.querySelector(selectors.createdRangeFrom)?.value,
+    createdRT: document.querySelector(selectors.createdRangeTo)?.value,
+    updatedRF: document.querySelector(selectors.updatedRangeFrom)?.value,
+    updatedRT: document.querySelector(selectors.updatedRangeTo)?.value,
+    deadlineRF: document.querySelector(selectors.deadlineRangeFrom)?.value,
+    deadlineRT: document.querySelector(selectors.deadlineRangeTo)?.value,
+    finishedRF: document.querySelector(selectors.finishedRangeFrom)?.value,
+    finishedRT: document.querySelector(selectors.finishedRangeTo)?.value,
+    groupBy: document.querySelector(selectors.groupBy)?.value || '__none',
+  };
+  return filters;
 }
