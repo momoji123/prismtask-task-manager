@@ -1158,8 +1158,10 @@ html,body,#app{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;font
     border-bottom: none;
 }
 
-.statistic-widget .error {
+#statistics-placeholder .error {
     color: var(--danger);
+    display: flex;
+    justify-content: space-between;
 }
 
 .clickable-task {
