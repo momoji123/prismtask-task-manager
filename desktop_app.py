@@ -23,7 +23,7 @@ def main():
 
     window.events.loaded += on_loaded
     #webview.start(private_mode=False)
-    webview.start(debug=True)
+    webview.start(debug=False, private_mode=True)
 
 if __name__ == '__main__':
     main()
