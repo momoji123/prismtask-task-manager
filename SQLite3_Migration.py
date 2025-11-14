@@ -127,6 +127,74 @@ def migrate_status_column(path):
         if 'conn' in locals():
             conn.rollback()
 
+def migrate_origin_column(path):
+    """
+    Migrates the 'from' column from TEXT to INTEGER in 'tasks' tables.
+    It creates a new 'origin' table and populates it with existing from descriptions.
+    """
+    print("Starting from column migration...")
+    
+    if not os.path.exists(path):
+        print(f"Database file not found at {path}. Aborting migration.")
+        return
+
+    try:
+        conn, cursor = connectDB(path, DATABASE_KEY)
+
+        # 1. Create the new 'origin' table
+        print("Creating 'origin' table...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS origin (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                description TEXT NOT NULL UNIQUE
+            )
+        ''')
+
+        # 2. Get all distinct 'from' from both tables
+        print("Fetching distinct 'from' from 'tasks' and 'milestones' tables...")
+        cursor.execute(''' SELECT DISTINCT "from" FROM tasks WHERE status IS NOT NULL AND status != '' ''')
+        task_origin = [row[0] for row in cursor.fetchall()]
+
+        all_origin = set(task_origin)
+
+        # 3. Populate the 'origin' table
+        if all_origin:
+            print(f"Populating 'origin' table with: {', '.join(all_origin)}")
+            for origin in all_origin:
+                cursor.execute("INSERT OR IGNORE INTO origin (description) VALUES (?)", (origin,))
+        else:
+            print("No existing statuses found to migrate.")
+
+        # 4. Alter 'tasks' table
+        print("Altering 'tasks' table...")
+        cursor.execute("ALTER TABLE tasks RENAME TO tasks_old;")
+        cursor.execute('''
+            CREATE TABLE tasks (
+                id TEXT PRIMARY KEY, creator TEXT NOT NULL, title TEXT, origin INTEGER, priority INTEGER, 
+                deadline TEXT, finishDate TEXT, status INTEGER, description TEXT, notes TEXT,
+                categories TEXT, attachments TEXT, createdAt TEXT, updatedAt TEXT,
+                FOREIGN KEY(status) REFERENCES status(id),
+                FOREIGN KEY(origin) REFERENCES origin(id)
+            )
+        ''')
+        cursor.execute('''
+            INSERT INTO tasks (id, creator, title, origin, priority, deadline, finishDate, status, description, notes, categories, attachments, createdAt, updatedAt)
+            SELECT 
+                t.id, t.creator, t.title, o.id, t.priority, t.deadline, t.finishDate, status, t.description, t.notes, t.categories, t.attachments, t.createdAt, t.updatedAt
+            FROM tasks_old AS t
+            LEFT JOIN origin AS o ON t."from" = o.description;
+        ''')
+        cursor.execute("DROP TABLE tasks_old;")
+        print("'tasks' table migrated successfully.")
+
+        conn.commit()
+        print("\nMigration completed successfully!")
+
+    except sqlite.Error as e:
+        print(f"An error occurred during migration: {e}")
+        if 'conn' in locals():
+            conn.rollback()
+
 try:
     encrypt_database('./data/tasks.db', './data/tasks_encrypted.db')
     encrypt_database('./data/auth.db', './data/auth_encrypted.db')
@@ -136,6 +204,7 @@ finally:
 
 try:
     migrate_status_column('./data/tasks_encrypted.db')
+    migrate_origin_column('./data/tasks_encrypted.db')
 finally:
     print("Database migration completed. press enter to continue...")
     input()

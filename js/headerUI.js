@@ -6,7 +6,7 @@ import { DB } from './storage.js';
 import { escapeHtml, showModalAlert, showModalAlertConfirm } from './utilUI.js';
 // Import the new functions for login, logout, and getting authenticated username
 import { login, logout, getAuthenticatedUsername, initAuth, saveTaskToServer, saveMilestoneToServer, loadTasksSummaryFromServer, loadTaskFromServer, loadMilestonesForTaskFromServer, 
-  getCategoriesFromServer, getStatusesFromServer, getFromValuesFromServer 
+  getCategoriesFromServer, getStatusesFromServer, getFromValuesFromServer, deleteFromValueFromServer, deleteStatusFromServer
 } from './apiService.js';
 import { renderTaskList, getCurrentFilters } from './leftMenuTaskUI.js';
 
@@ -211,32 +211,36 @@ async function manageList(type, title, renderFilterCategoriesMultiSelectCallback
 
         let isInUse = false;
         if (type === 'categories') {
-          var categories = await getCategoriesFromServer();
+          var categories = await getCategoriesFromServer(true);
           isInUse = categories.some(category => category ===itemToRemove);
           if (isInUse) {
             showModalAlert(`Cannot delete category "${itemToRemove}" because it is currently in use`);
+            return;
           }
         } else if (type === 'statuses') {
           // Check if status is used by tasks OR milestones
-          var statuses = await getStatusesFromServer();
+          var statuses = await getStatusesFromServer(true);
 
           isInUse = statuses.some(stat => stat ===itemToRemove);
           if (isInUse) {
             showModalAlert(`Cannot delete status "${itemToRemove}" because it is currently in use by one or more tasks or milestones.`);
+            return;
+          }else{
+            await deleteStatusFromServer(itemToRemove);
           }
         } else if (type === 'froms') {
-          var froms = await getFromValuesFromServer();
+          var froms = await getFromValuesFromServer(true);
 
           isInUse = froms.some(from => from === itemToRemove);
           if (isInUse) {
             showModalAlert(`Cannot delete "From" source "${itemToRemove}" because it is currently used by one or more tasks.`);
+            return;
+          } else{
+            await deleteFromValueFromServer(itemToRemove);
           }
         }
 
-        if (isInUse) {
-          return; // Prevent deletion if in use
-        }
-
+        
         tempList.splice(idxToRemove, 1);
         renderModalTags();
       });

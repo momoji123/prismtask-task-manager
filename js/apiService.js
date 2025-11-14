@@ -95,6 +95,7 @@ export async function loadTasksSummaryFromServer(filters = {}, pagination = {}) 
     await pywebviewReady;
     try {
         const response = await window.pywebview.api.load_tasks_summary(_authToken, filters, pagination);
+        console.log(response);
         return await handleApiResponse(response);
     } catch (error) {
         console.error('Failed to load task summaries from server:', error);
@@ -189,10 +190,10 @@ export async function deleteMilestoneFromServer(milestoneId, taskId) {
 /**
  * Loads a distinct list of statuses from the server.
  */
-export async function getStatusesFromServer() {
+export async function getStatusesFromServer(onlyActive = false) {
     await pywebviewReady;
     try {
-        const response = await window.pywebview.api.get_distinct_statuses(_authToken);
+        const response = await window.pywebview.api.get_distinct_statuses(_authToken, onlyActive);
         return await handleApiResponse(response);
     } catch (error) {
         console.error('Failed to load statuses from server:', error);
@@ -203,10 +204,10 @@ export async function getStatusesFromServer() {
 /**
  * Loads a distinct list of 'from' values from the server.
  */
-export async function getFromValuesFromServer() {
+export async function getFromValuesFromServer(onlyActive = false) {
     await pywebviewReady;
     try {
-        const response = await window.pywebview.api.get_distinct_from_values(_authToken);
+        const response = await window.pywebview.api.get_distinct_from_values(_authToken, onlyActive);
         return await handleApiResponse(response);
     } catch (error) {
         console.error('Failed to load from values from server:', error);
@@ -217,10 +218,10 @@ export async function getFromValuesFromServer() {
 /**
  * Loads a distinct list of categories from the server.
  */
-export async function getCategoriesFromServer() {
+export async function getCategoriesFromServer(onlyActive = false) {
     await pywebviewReady;
     try {
-        const response = await window.pywebview.api.get_distinct_categories(_authToken);
+        const response = await window.pywebview.api.get_distinct_categories(_authToken, onlyActive);
         return await handleApiResponse(response);
     } catch (error) {
         console.error('Failed to load categories from server:', error);
@@ -238,6 +239,34 @@ export async function getTaskCounts(since = null) {
         return await handleApiResponse(response);
     } catch (error) {
         console.error('Failed to get task counts from server:', error);
+        throw error;
+    }
+}
+
+/**
+ * delete status by its description
+ */
+export async function deleteStatusFromServer(description) {
+    await pywebviewReady;
+    try {
+        const response = await window.pywebview.api.delete_status_values(_authToken, description);
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Failed to delete status from server:', error);
+        throw error;
+    }
+}
+
+/**
+ * delete from (origin) by its description
+ */
+export async function deleteFromValueFromServer(description) {
+    await pywebviewReady;
+    try {
+        const response = await window.pywebview.api.delete_from_values(_authToken, description);
+        return await handleApiResponse(response);
+    } catch (error) {
+        console.error('Failed to delete from value from server:', error);
         throw error;
     }
 }
