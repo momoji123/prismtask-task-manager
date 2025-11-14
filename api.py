@@ -195,7 +195,7 @@ class Api:
 
         if filters.get('q'):
             search_query = filters.get('q').lower()
-            sql_query += " AND (LOWER(t.title) LIKE ? OR LOWER(t.\"from\") LIKE ? OR LOWER(t.description) LIKE ? OR LOWER(t.notes) LIKE ?)"
+            sql_query += " AND (LOWER(t.title) LIKE ? OR LOWER(o.description) LIKE ? OR LOWER(t.description) LIKE ? OR LOWER(t.notes) LIKE ?)"
             query_args.extend([f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
 
         if filters.get('categories'):
