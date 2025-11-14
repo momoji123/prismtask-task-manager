@@ -35,6 +35,9 @@ def encrypt_database(unencrypted_path, encrypted_path):
     print(f"Encryption complete. New database created at: {encrypted_path}")
     print(f"To use, you must open it with the PRAGMA key: {key}")
 
-
-encrypt_database('./data/tasks.db', './data/tasks_encrypted.db')
-encrypt_database('./data/auth.db', './data/auth_encrypted.db')
+try:
+    encrypt_database('./data/tasks.db', './data/tasks_encrypted.db')
+    encrypt_database('./data/auth.db', './data/auth_encrypted.db')
+finally:
+    print("Press enter to close...")
+    input()
