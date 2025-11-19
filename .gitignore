@@ -1,5 +1,5 @@
 data/*
-prismtask_venv/*
+venv/*
 build/*
 dist/*
 *.spec
