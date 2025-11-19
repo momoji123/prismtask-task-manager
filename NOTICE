@@ -1,0 +1,23 @@
+this product includes software developed by momoji123,
+licensed under the MIT License. see LICENSE file for details.
+
+Third-Party Components
+----------------------
+
+1. pywebview
+   - License: BSD 3-Clause License
+   - Copyright (c) 2014-2017, Roman Sirokov
+   - Source: https://github.com/r0x0r/pywebview
+
+2. sqlchiper3-wheels
+   - License: Zlib License
+   - Copyright (c) 2004-2007, Gerhard Häring
+   - Source: https://github.com/laggykiller/sqlcipher3
+   
+License Texts
+-------------
+The fill license texts for these components are provided in the 
+"third_party_licenses" directory of this distribution.
+
+These licenses require attribution and preservation of copyright notices.
+No modifications have been made to the original license terms.

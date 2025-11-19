@@ -2,7 +2,7 @@
 
 echo "build desktop app executor"
 
-pyinstaller desktop_app.py --name run_desktop --add-data index.html:. --add-data Assets:Assets --add-data css:css --add-data js:js --icon=favicon.ico --distpath .\dist\desktop_app --onedir --console
+pyinstaller PrismTask.py --name run_desktop --add-data index.html:. --add-data Assets:Assets --add-data css:css --add-data js:js --icon=favicon.ico --distpath .\dist\desktop_app --onedir
 
 echo "build user manager app executor"
 
