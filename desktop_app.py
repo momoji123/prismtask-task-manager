@@ -3,7 +3,7 @@ from api import Api
 
 def main():
     api = Api()
-    window = webview.create_window('TaskTide Task Manager', 'index.html', js_api=api, width=1200, height=800)
+    window = webview.create_window('PrismTask - Task Manager', 'index.html', js_api=api, width=1200, height=800)
 
     def on_loaded():
         zoom_script = """
