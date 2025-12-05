@@ -212,6 +212,11 @@ class Api:
             sql_query += f" AND s.description IN ({status_placeholders})"
             query_args.extend(filters.get('statuses'))
 
+        if filters.get('froms'):
+            from_placeholders = ','.join('?' * len(filters.get('froms')))
+            sql_query += f" AND o.description IN ({from_placeholders})"
+            query_args.extend(filters.get('froms'))
+
         def add_date_filter(column_name, from_date, to_date):
             nonlocal sql_query, query_args
             if from_date and to_date:

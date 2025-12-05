@@ -9,9 +9,11 @@ import { DB } from './storage.js'; // Keep DB for persisting filter metadata
 // Internal state, initialized by the main UI module
 let categories = [];
 let statuses = [];
+let froms = [];
 let filterSectionVisible = true;
 let selectedFilterCategories = [];
 let selectedFilterStatuses = [];
+let selectedFilterFroms = [];
 let openTaskEditorFn = null;
 let openTaskViewerFn = null;
 let currentSelectedTaskId = null;
@@ -39,6 +41,11 @@ const selectors = {
   selectedFilterStatusesDisplay: '#selectedFilterStatusesDisplay',
   filterStatusDropdownContent: '#filterStatusDropdownContent',
 
+  filterFromMultiSelect: '#filterFromMultiSelect',
+  filterFromHeader: '#filterFromMultiSelect .multi-select-header',
+  selectedFilterFromsDisplay: '#selectedFilterFromsDisplay',
+  filterFromDropdownContent: '#filterFromDropdownContent',
+
   sortBy: '#sortBy',
   groupBy: '#groupBy',
   createdRangeFrom: '#createdRangeFrom',
@@ -65,9 +72,11 @@ const selectors = {
 export async function initLeftMenuTaskUI(initialState, onOpenEditor, onOpenViewer) {
   categories = initialState.categories;
   statuses = initialState.statuses;
+  froms = initialState.froms;
   filterSectionVisible = initialState.filterSectionVisible;
   selectedFilterCategories = initialState.selectedFilterCategories;
   selectedFilterStatuses = initialState.selectedFilterStatuses || []; 
+  selectedFilterFroms = initialState.selectedFilterFroms || [];
   currentUsername = initialState.username;
 
   const appContainer = document.querySelector(selectors.appContainer);
@@ -144,12 +153,25 @@ export async function initLeftMenuTaskUI(initialState, onOpenEditor, onOpenViewe
     });
   }
 
+  const filterFromHeader = document.querySelector(selectors.filterFromHeader);
+  const filterFromDropdownContent = document.querySelector(selectors.filterFromDropdownContent);
+
+  if (filterFromHeader) {
+    filterFromHeader.addEventListener('click', (event) => {
+      filterFromDropdownContent?.classList.toggle('show');
+      event.stopPropagation();
+    });
+  }
+
   window.addEventListener('click', (event) => {
     if (filterCategoryDropdownContent && !event.target.closest(selectors.filterCategoryMultiSelect) && filterCategoryDropdownContent.classList.contains('show')) {
       filterCategoryDropdownContent.classList.remove('show');
     }
     if (filterStatusDropdownContent && !event.target.closest(selectors.filterStatusMultiSelect) && filterStatusDropdownContent.classList.contains('show')) {
       filterStatusDropdownContent.classList.remove('show');
+    }
+    if (filterFromDropdownContent && !event.target.closest(selectors.filterFromMultiSelect) && filterFromDropdownContent.classList.contains('show')) {
+      filterFromDropdownContent.classList.remove('show');
     }
   });
 
@@ -164,6 +186,7 @@ export async function initLeftMenuTaskUI(initialState, onOpenEditor, onOpenViewe
 
   renderFilterCategoriesMultiSelect();
   renderFilterStatusMultiSelect();
+  renderFilterFromsMultiSelect();
   await renderTaskList(true); // Initial load
 }
 
@@ -174,9 +197,11 @@ export async function initLeftMenuTaskUI(initialState, onOpenEditor, onOpenViewe
 export function updateLeftMenuTaskUIState(updatedState) {
   if (updatedState.categories) categories = updatedState.categories;
   if (updatedState.statuses) statuses = updatedState.statuses;
+  if (updatedState.froms) froms = updatedState.froms;
   if (updatedState.filterSectionVisible !== undefined) filterSectionVisible = updatedState.filterSectionVisible;
   if (updatedState.selectedFilterCategories) selectedFilterCategories = updatedState.selectedFilterCategories;
   if (updatedState.selectedFilterStatuses) selectedFilterStatuses = updatedState.selectedFilterStatuses;
+  if (updatedState.selectedFilterFroms) selectedFilterFroms = updatedState.selectedFilterFroms;
   if (updatedState.username !== undefined) currentUsername = updatedState.username;
   if (updatedState.currentSelectedTaskId !== undefined) currentSelectedTaskId = updatedState.currentSelectedTaskId;
   
@@ -186,6 +211,7 @@ export function updateLeftMenuTaskUIState(updatedState) {
   }
   renderFilterCategoriesMultiSelect();
   renderFilterStatusMultiSelect();
+  renderFilterFromsMultiSelect();
   renderTaskList(true); // Always reset on global state change
 }
 
@@ -457,6 +483,58 @@ export async function renderFilterStatusMultiSelect() {
   });
 }
 
+/**
+ * Renders the multi-select from filter UI.
+ */
+export async function renderFilterFromsMultiSelect() {
+  const selectedDisplay = document.querySelector(selectors.selectedFilterFromsDisplay);
+  const dropdownContent = document.querySelector(selectors.filterFromDropdownContent);
+
+  if (!selectedDisplay || !dropdownContent) return;
+
+  selectedDisplay.innerHTML = '';
+  dropdownContent.innerHTML = '';
+
+  if (selectedFilterFroms.length === 0) {
+    selectedDisplay.innerHTML = '<span class="placeholder-text">All Froms</span>';
+  } else {
+    selectedFilterFroms.forEach((from) => {
+      const tag = document.createElement('div');
+      tag.className = 'selected-tag';
+      tag.innerHTML = `${escapeHtml(from)}<button data-from="${escapeHtml(from)}">x</button>`;
+      tag.querySelector('button')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const fromToRemove = e.target.dataset.from;
+        selectedFilterFroms = selectedFilterFroms.filter(f => f !== fromToRemove);
+        await DB.putMeta('selectedFilterFroms', selectedFilterFroms);
+        renderFilterFromsMultiSelect();
+        renderTaskList(true); // Reset on filter change
+      });
+      selectedDisplay.appendChild(tag);
+    });
+  }
+
+  froms.forEach(from => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.textContent = escapeHtml(from);
+    if (selectedFilterFroms.includes(from)) item.classList.add('selected');
+
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (selectedFilterFroms.includes(from)) {
+        selectedFilterFroms = selectedFilterFroms.filter(f => f !== from);
+      } else {
+        selectedFilterFroms.push(from);
+      }
+      await DB.putMeta('selectedFilterFroms', selectedFilterFroms);
+      renderFilterFromsMultiSelect();
+      renderTaskList(true); // Reset on filter change
+    });
+    dropdownContent.appendChild(item);
+  });
+}
+
 // Function to handle showing the sidebar (e.g., when a close button is clicked)
 export function showLeftMenu() {
   const appContainer = document.querySelector(selectors.appContainer);
@@ -483,6 +561,7 @@ export function getCurrentFilters() {
     q: document.querySelector(selectors.searchInput)?.value || '',
     categories: selectedFilterCategories,
     statuses: selectedFilterStatuses,
+    froms: selectedFilterFroms,
     sortBy: document.querySelector(selectors.sortBy)?.value || 'updatedAt',
     createdRF: document.querySelector(selectors.createdRangeFrom)?.value,
     createdRT: document.querySelector(selectors.createdRangeTo)?.value,
