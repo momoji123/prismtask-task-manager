@@ -94,7 +94,6 @@ export function updateTaskEditorUIState(updatedState) {
  * @param {HTMLElement} editorContainer - The container for the task editor.
  */
 function updateButtonStates(editorContainer) {
-  console.log("updateButtonStates")
   const saveBtn = editorContainer.querySelector(selectors.saveTaskBtn);
   const deleteBtn = editorContainer.querySelector(selectors.deleteTaskBtn);
   const openMilestonesBtn = editorContainer.querySelector(selectors.openMilestonesBtn);
@@ -103,8 +102,6 @@ function updateButtonStates(editorContainer) {
   // or the task has no creator (meaning it's a new task that the current user will create)
   // If no currentUsername, all operations are disabled as authentication is required
   const canEditOrDelete = !!currentUsername && (currentTask && currentTask.creator === currentUsername || !currentTask.creator);
-  console.log("currentUsername", currentUsername)
-  console.log("currentTask.creator", currentTask.creator)
 
   if (saveBtn) {
     saveBtn.disabled = !canEditOrDelete;

@@ -507,8 +507,6 @@ async function updateListsFromServer() {
     const serverStatuses = await getStatusesFromServer();
     const serverFroms = await getFromValuesFromServer();
 
-    console.log(serverFroms)
-
     categories = [...new Set([...categories, ...serverCategories])];
     statuses = [...new Set([...statuses, ...serverStatuses])];
     froms = [...new Set([...froms, ...serverFroms])];
@@ -692,12 +690,10 @@ async function importJSON(e) {
 
           // Save task to server
           await saveTaskToServer(t);
-          console.log(`Task '${t.id}' imported to server.`);
 
           // Save associated milestones to server
           for (const m of milestonesToImport) {
             await saveMilestoneToServer(m, t.id);
-            console.log(`Milestone '${m.id}' for task '${t.id}' imported to server.`);
           }
         } catch (saveError) {
           console.error(`Failed to import task '${t.id}' or its milestones to server:`, saveError);

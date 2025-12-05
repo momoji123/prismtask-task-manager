@@ -20,7 +20,6 @@ export function initAuth() {
     if (storedToken && storedUsername) {
         _authToken = storedToken;
         _authUsername = storedUsername;
-        console.log('Auth token and username loaded from sessionStorage.');
     }
 }
 
@@ -95,7 +94,6 @@ export async function loadTasksSummaryFromServer(filters = {}, pagination = {}) 
     await pywebviewReady;
     try {
         const response = await window.pywebview.api.load_tasks_summary(_authToken, filters, pagination);
-        console.log(response);
         return await handleApiResponse(response);
     } catch (error) {
         console.error('Failed to load task summaries from server:', error);
