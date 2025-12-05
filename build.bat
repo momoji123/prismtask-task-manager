@@ -47,6 +47,11 @@ if "%isSuccess%"=="true" (
 	pushd .\dist\desktop_app
 	ren PrismTask PrismTask-V1.0.!TODAY!
 	popd
+	
+	echo "Cleaning project folder"
+
+	del /q *.spec
+	rmdir /S /Q ".\build"
 )
 
 pause
