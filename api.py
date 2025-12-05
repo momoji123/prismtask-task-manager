@@ -79,7 +79,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS tasks (
             id TEXT PRIMARY KEY, creator TEXT NOT NULL, title TEXT, origin INTEGER, priority INTEGER, 
             deadline TEXT, finishDate TEXT, status INTEGER, description TEXT, notes TEXT,
-            categories TEXT, attachments TEXT, createdAt TEXT, updatedAt TEXT,
+            categories TEXT, attachments TEXT, createdAt TEXT, updatedAt TEXT, difficulty INTEGER,
             FOREIGN KEY(status) REFERENCES status(id)
             FOREIGN KEY(origin) REFERENCES origin(id)
         )
@@ -99,13 +99,6 @@ def init_db():
             FOREIGN KEY(status) REFERENCES status(id)
         )
     ''')
-
-    cursor.execute("PRAGMA table_info(tasks)")
-
-    columns = [info[1] for info in cursor.fetchall()]
-
-    if 'createdAt' not in columns:
-        cursor.execute("ALTER TABLE tasks ADD COLUMN createdAt TEXT")
 
     conn.commit()
 

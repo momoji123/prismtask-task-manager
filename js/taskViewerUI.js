@@ -24,6 +24,7 @@ const selectors = {
   viewNotesContent: '#viewNotesContent',
   viewCategoryList: '#viewCategoryList',
   viewAttachmentsList: '#viewAttachments',
+  viewTaskDifficulty: '#viewTaskDifficulty',
   editTaskBtn: '#editTaskBtn',
   viewMilestonesBtn: '#viewMilestonesBtn',
   closeViewerBtn: '#closeTaskViewerBtn', // New selector for the close button
@@ -72,10 +73,12 @@ export async function openTaskViewer(task, isNewTask = false) {
   viewerArea.innerHTML = ''; // Clear previous content
   viewerArea.appendChild(clone);
 
+  console.log(currentTask)
   // Populate fields
   viewerArea.querySelector(selectors.viewTaskTitle).textContent = currentTask.title || 'No Title';
   viewerArea.querySelector(selectors.viewTaskFrom).textContent = currentTask.from || 'N/A';
   viewerArea.querySelector(selectors.viewTaskPriority).textContent = currentTask.priority || 'N/A';
+  viewerArea.querySelector(selectors.viewTaskDifficulty).textContent = currentTask.difficulty || 'N/A';
   viewerArea.querySelector(selectors.viewTaskDeadline).textContent = currentTask.deadline ? new Date(currentTask.deadline).toLocaleDateString() : 'No Deadline';
   viewerArea.querySelector(selectors.viewTaskFinishDate).textContent = currentTask.finishDate ? new Date(currentTask.finishDate).toLocaleDateString() : 'Not Finished';
   viewerArea.querySelector(selectors.viewTaskStatus).textContent = currentTask.status || 'N/A';
