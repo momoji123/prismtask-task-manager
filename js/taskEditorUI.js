@@ -94,6 +94,7 @@ export function updateTaskEditorUIState(updatedState) {
  * @param {HTMLElement} editorContainer - The container for the task editor.
  */
 function updateButtonStates(editorContainer) {
+  console.log("updateButtonStates")
   const saveBtn = editorContainer.querySelector(selectors.saveTaskBtn);
   const deleteBtn = editorContainer.querySelector(selectors.deleteTaskBtn);
   const openMilestonesBtn = editorContainer.querySelector(selectors.openMilestonesBtn);
@@ -429,7 +430,7 @@ function renderCategoryTags() {
     // Disable remove button if current user is not the creator or no username is set
     const removeButton = tag.querySelector('button');
     if (removeButton) {
-      const canEdit = currentUsername && currentTask.creator === currentUsername;
+      const canEdit = (currentUsername && currentTask.creator === currentUsername) || !currentTask.creator;
       removeButton.disabled = !canEdit;
       if (canEdit) {
         removeButton.addEventListener('click', () => {
@@ -458,7 +459,7 @@ function renderNewCategoryDropdown() {
   
   // Disable if not editable
   const addCategoryBtn = document.querySelector(selectors.addCategoryBtn);
-  const canEdit = currentUsername && currentTask.creator === currentUsername;
+  const canEdit = (currentUsername && currentTask.creator === currentUsername) || !currentTask.creator;
   select.disabled = !canEdit;
   if (addCategoryBtn) addCategoryBtn.disabled = !canEdit;
 }
