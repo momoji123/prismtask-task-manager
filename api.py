@@ -193,10 +193,20 @@ class Api:
 
         query_args = [username]
 
-        if filters.get('q'):
-            search_query = filters.get('q').lower()
-            sql_query += " AND (LOWER(t.title) LIKE ? OR LOWER(o.description) LIKE ? OR LOWER(t.description) LIKE ? OR LOWER(t.notes) LIKE ?)"
-            query_args.extend([f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
+        search_query_full = filters.get('q', '').strip()
+        if search_query_full:
+            search_terms = [term.strip().lower() for term in search_query_full.split(';') if term.strip()]
+            
+            if search_terms:
+                all_term_conditions = []
+                for term in search_terms:
+                    # Each term has its own OR group for title, description, notes
+                    term_condition = "(LOWER(t.title) LIKE ? OR LOWER(t.description) LIKE ? OR LOWER(t.notes) LIKE ?)"
+                    all_term_conditions.append(term_condition)
+                    query_args.extend([f'%{term}%', f'%{term}%', f'%{term}%'])
+                
+                # Join all term conditions with AND
+                sql_query += " AND (" + " AND ".join(all_term_conditions) + ")"
 
         if filters.get('categories'):
             category_conditions = []
