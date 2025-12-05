@@ -85,6 +85,12 @@ def init_db():
         )
     ''')
 
+    # Add 'difficulty' column to tasks table if it doesn't exist
+    cursor.execute("PRAGMA table_info(tasks)")
+    columns = [info[1] for info in cursor.fetchall()]
+    if 'difficulty' not in columns:
+        cursor.execute("ALTER TABLE tasks ADD COLUMN difficulty INTEGER DEFAULT 5")
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS milestones (
             id TEXT PRIMARY KEY, taskId TEXT NOT NULL, title TEXT, deadline TEXT, finishDate TEXT,
@@ -345,13 +351,13 @@ class Api:
         cursor.execute('''
             INSERT OR REPLACE INTO tasks (
                 id, creator, title, origin, priority, deadline, finishDate, status,
-                description, notes, categories, attachments, createdAt, updatedAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                description, notes, categories, attachments, createdAt, updatedAt, difficulty
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             task['id'], username, task.get('title'), origin_id, task.get('priority'),
             task.get('deadline'), task.get('finishDate'), status_id,
             task.get('description'), task.get('notes'), categories_json, attachments_json,
-            task.get('createdAt'), task.get('updatedAt')
+            task.get('createdAt'), task.get('updatedAt'), task.get('difficulty', 5)
         ))
         conn.commit()
         conn.close()

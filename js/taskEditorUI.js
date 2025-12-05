@@ -241,6 +241,8 @@ export async function openTaskEditor(task, isNewTask = false) {
         <select id="newCategorySelect" class="w-full"></select>
         <button id="addCategoryBtn">Add</button>
       </div>
+      <div class="label">Difficulty (<span id="difficultyValue">${currentTask.difficulty || 5}</span>/10)</div>
+      <input type="range" id="taskDifficulty" min="1" max="10" value="${currentTask.difficulty || 5}" style="width: 100%;">
       <div class="label">Attachments</div>
       <div id="attachments" class="attach-list"></div>
     </aside>
@@ -304,6 +306,15 @@ export async function openTaskEditor(task, isNewTask = false) {
     select.value = '__placeholder'; // Reset dropdown
   });
 
+  // Add event listener for the new difficulty slider
+  const difficultySlider = editorContainer.querySelector('#taskDifficulty');
+  const difficultyValueSpan = editorContainer.querySelector('#difficultyValue');
+  if (difficultySlider && difficultyValueSpan) {
+    difficultySlider.addEventListener('input', () => {
+      difficultyValueSpan.textContent = difficultySlider.value;
+    });
+  }
+
   updateButtonStates(editorContainer); // Call to set initial button states
 
   // On mobile, show the main content (editor) and hide the sidebar
@@ -357,6 +368,7 @@ async function saveTask() {
   currentTask.deadline = editorContainer.querySelector(selectors.taskDeadlineInput)?.value || null;
   currentTask.finishDate = editorContainer.querySelector(selectors.taskFinishDateInput)?.value || null;
   currentTask.status = editorContainer.querySelector(selectors.taskStatusSelect)?.value || '';
+  currentTask.difficulty = parseInt(editorContainer.querySelector('#taskDifficulty')?.value, 10) || 5;
   currentTask.description = (descEditorInstance) ? descEditorInstance.getHTML() : '';
   currentTask.notes = (notesEditorInstance) ? notesEditorInstance.getHTML() : '';
   currentTask.updatedAt = new Date().toISOString();
